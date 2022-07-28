@@ -14,10 +14,7 @@ RESPONSES = []
 def start_survey():
     """Home page for survey."""
 
-    title = survey.title
-    instructions = survey.instructions
-
-    return render_template("survey_start.html",title=title, instructions=instructions)
+    return render_template("survey_start.html",survey=survey)
 
 @app.post("/begin")
 def redirect_page():
@@ -41,7 +38,7 @@ def store_answer():
     #cleaner way to do this?
     responses_length = len(RESPONSES)
     
-    if responses_length >= len(survey.questions):
+    if responses_length == len(survey.questions):
         return redirect("/thanks")
     else:
         return redirect(f"/questions/{responses_length}")
