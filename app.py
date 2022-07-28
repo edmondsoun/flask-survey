@@ -8,12 +8,10 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 debug = DebugToolbarExtension(app)
 
-RESPONSES = []
-
 @app.get("/")
 def start_survey():
-    """Home page for survey."""
-
+    """Home page for survey. Sets session cookie."""
+    session["responses"] = []
     return render_template("survey_start.html",survey=survey)
 
 @app.post("/begin")
@@ -23,7 +21,16 @@ def redirect_page():
 
 @app.get("/questions/<int:question_number>")
 def questions(question_number):
-    """Renders survey question and response options."""
+    """Renders survey question and response options. Directs users
+    to next sequential question"""
+
+    if question_number != len(session["responses"]):
+        question_number = len(session["responses"])
+        flash("you have tried to access an invalid question!")
+        return redirect(f"/questions/{question_number}")
+
+    if len(session["responses"]) > len(survey.questions):
+        return redirect("/thanks")
 
     question = survey.questions[question_number]
     choices = question.choices
@@ -34,16 +41,18 @@ def questions(question_number):
 def store_answer():
     """Stores answer and redirects to next question or thank you page."""
 
-    RESPONSES.append(request.form["answer"])
-    #cleaner way to do this?
-    responses_length = len(RESPONSES)
-    
+    responses = session["responses"]
+    responses.append(request.form["answer"])
+    session["responses"] = responses
+
+    responses_length = len(session["responses"])
+
     if responses_length == len(survey.questions):
         return redirect("/thanks")
     else:
         return redirect(f"/questions/{responses_length}")
 
-@app.get("/thanks") 
+@app.get("/thanks")
 def say_thanks():
     """Thanks user."""
     return render_template("completion.html")
