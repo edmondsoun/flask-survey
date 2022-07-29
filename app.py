@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
-from surveys import satisfaction_survey as survey
+from surveys import surveys
+
+survey = surveys["satisfaction"]
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "never-tell!"
@@ -9,14 +11,21 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
 
 @app.get("/")
-def start_survey():
-    """Home page for survey. Sets session cookie."""
+def pick_survey():
     session["responses"] = []
-    return render_template("survey_start.html",survey=survey)
+    return render_template("survey_choice.html",surveys=surveys)
+
+# @app.get("/survey")
+# def start_survey():
+#     """Home page for survey. Sets session cookie."""
+
+#     return render_template("survey_start.html",survey=survey)
 
 @app.post("/begin")
 def redirect_page():
     """Redirect to first question."""
+    form_value = request.form["pick"]
+    survey = surveys[form_value]
     return redirect("/questions/0")
 
 @app.get("/questions/<int:question_number>")
